@@ -227,7 +227,47 @@ generate_reports() {
   } > "$report_file"
 }
 
+# Movemos los archivos ya procesados de devices a backups
+move_to_backup() {
+  echo "Moviendo archivos .log a la carpeta de respaldo..."
 
-generate_reports
+  # Activa la opción nullglob: si no hay archivos .log, el patrón *.log no se deja como texto,
+  # sino que se convierte en un array vacío. Así evitamos errores al iterar sobre archivos inexistentes.
+  # shopt sirve para interactuar con el shell
+  shopt -s nullglob  # evita errores si no hay archivos
+  local files=("${LOG_FOLDER}"/*.log)
+
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "✅ No hay archivos para mover."
+    return
+  fi
+
+  # Mueve cada archivo a la carpeta backup
+  for file in "${files[@]}"; do
+    mv "$file" "$BACKUP_FOLDER/"
+  done
+
+  echo "✅ Archivos movidos a $BACKUP_FOLDER"
+}
+
+main_loop() {
+  echo "🛰️  Iniciando ciclo automático Apolo-11 (cada $CYCLE_SECONDS segundos)..."
+  init_directories
+
+  while true; do
+    echo ""
+    echo "🕒 Nueva ejecución: $(date)"
+    
+    generate_files
+    consolidate_files
+    generate_reports
+    move_to_backup
+
+    echo "⏳ Esperando $CYCLE_SECONDS segundos para la siguiente ejecución..."
+    sleep "$CYCLE_SECONDS"
+  done
+}
+
+main_loop
 
 

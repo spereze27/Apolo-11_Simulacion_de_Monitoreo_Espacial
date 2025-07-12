@@ -11,7 +11,7 @@ BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
 REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
 
 # === CICLO DE SIMULACIÓN ===
-CYCLE_SECONDS=20              # Tiempo (en segundos) entre cada ejecución
+CYCLE_SECONDS=200              # Tiempo (en segundos) entre cada ejecución
 MAX_FILES=100                 # Cantidad máxima de archivos a generar por ciclo
 MIN_FILES=1                   # Cantidad mínima de archivos por ciclo
 

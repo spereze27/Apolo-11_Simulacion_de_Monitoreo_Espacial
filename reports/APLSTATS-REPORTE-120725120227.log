@@ -1,0 +1,121 @@
+===== REPORTE GENERAL - 120725120227 =====
+
+--- Análisis de eventos por estado, misión y dispositivo ---
+25	UNKN	unknown	unknown
+4	TMRS	spacesuit	killed
+4	TMRS	spacesuit	faulty
+4	TMRS	ship	excellent
+4	CLNM	ship	unknown
+4	CLNM	ship	faulty
+3	TMRS	ship	faulty
+3	GALXONE	vehicle	faulty
+3	GALXONE	ship	excellent
+3	CLNM	vehicle	killed
+3	CLNM	vehicle	good
+3	CLNM	ship	excellent
+3	CLNM	satellite	excellent
+2	TMRS	vehicle	unknown
+2	TMRS	ship	good
+2	TMRS	satellite	faulty
+2	ORBONE	spacesuit	excellent
+2	ORBONE	ship	killed
+2	ORBONE	satellite	killed
+2	ORBONE	satellite	good
+2	GALXONE	vehicle	unknown
+2	GALXONE	vehicle	excellent
+2	GALXONE	ship	faulty
+2	CLNM	spacesuit	unknown
+2	CLNM	spacesuit	excellent
+2	CLNM	satellite	unknown
+1	TMRS	vehicle	warning
+1	TMRS	vehicle	killed
+1	TMRS	vehicle	good
+1	TMRS	vehicle	faulty
+1	TMRS	vehicle	excellent
+1	TMRS	spacesuit	warning
+1	TMRS	spacesuit	good
+1	TMRS	ship	warning
+1	TMRS	ship	unknown
+1	TMRS	ship	killed
+1	TMRS	satellite	unknown
+1	TMRS	satellite	good
+1	TMRS	satellite	excellent
+1	ORBONE	vehicle	warning
+1	ORBONE	vehicle	unknown
+1	ORBONE	vehicle	killed
+1	ORBONE	vehicle	faulty
+1	ORBONE	vehicle	excellent
+1	ORBONE	spacesuit	warning
+1	ORBONE	spacesuit	unknown
+1	ORBONE	spacesuit	killed
+1	ORBONE	spacesuit	good
+1	ORBONE	ship	warning
+1	ORBONE	ship	unknown
+1	ORBONE	ship	good
+1	ORBONE	ship	faulty
+1	ORBONE	ship	excellent
+1	ORBONE	satellite	warning
+1	ORBONE	satellite	unknown
+1	ORBONE	satellite	faulty
+1	GALXONE	vehicle	good
+1	GALXONE	spacesuit	good
+1	GALXONE	spacesuit	excellent
+1	GALXONE	ship	warning
+1	GALXONE	ship	killed
+1	GALXONE	ship	good
+1	GALXONE	satellite	unknown
+1	GALXONE	satellite	good
+1	GALXONE	satellite	faulty
+1	GALXONE	satellite	excellent
+1	CLNM	vehicle	faulty
+1	CLNM	spacesuit	warning
+1	CLNM	spacesuit	killed
+1	CLNM	spacesuit	good
+1	CLNM	spacesuit	faulty
+1	CLNM	satellite	warning
+1	CLNM	satellite	good
+
+--- Dispositivos con más desconexiones (estado: unknown) por misión ---
+25	UNKN	unknown
+4	CLNM	ship
+2	TMRS	vehicle
+2	GALXONE	vehicle
+2	CLNM	spacesuit
+2	CLNM	satellite
+1	TMRS	ship
+1	TMRS	satellite
+1	ORBONE	vehicle
+1	ORBONE	spacesuit
+1	ORBONE	ship
+1	ORBONE	satellite
+1	GALXONE	satellite
+
+--- Dispositivos inoperables por misión (estado: faulty) ---
+4	TMRS	spacesuit
+4	CLNM	ship
+3	TMRS	ship
+3	GALXONE	vehicle
+2	TMRS	satellite
+2	GALXONE	ship
+1	TMRS	vehicle
+1	ORBONE	vehicle
+1	ORBONE	ship
+1	ORBONE	satellite
+1	GALXONE	satellite
+1	CLNM	vehicle
+1	CLNM	spacesuit
+
+--- Porcentaje de registros por misión ---
+TMRS	24,46%
+CLNM	23,74%
+UNKN	17,99%
+ORBONE	17,99%
+GALXONE	15,83%
+
+--- Porcentaje de registros por tipo de dispositivo ---
+ship	27,34%
+vehicle	19,42%
+spacesuit	18,71%
+unknown	17,99%
+satellite	16,55%
+
