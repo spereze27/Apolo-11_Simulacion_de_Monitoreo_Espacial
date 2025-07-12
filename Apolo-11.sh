@@ -121,6 +121,17 @@ consolidate_files() {
       echo "   → Fecha encontrada: $log_date (esperada: $day_id)"
       echo "   → Hash en el archivo: $log_hash"
     fi
+    # === Generar archivo separado con dispositivos en falla (estado "faulty") ===
+    # Se busca poder hacer un seguimiento mas riguroso a los dispositivos que presentan fallos
+    # Se extrae en un archivo aparte unicamente los registros con fallas.
+    # El nombre incluye la fecha del día, por ejemplo: FALLAS-120724.log
+    local faults_file="${REPORT_FOLDER}/FALLAS-${day_id}.log"
+
+    # Reinicia el archivo si ya existía
+    echo -e "date${FIELD_SEPARATOR}mission${FIELD_SEPARATOR}device_type${FIELD_SEPARATOR}device_status${FIELD_SEPARATOR}hash" > "$faults_file"
+
+    # Filtra los registros "faulty" y los añade
+    awk -F "$FIELD_SEPARATOR" '$4 == "faulty"' "$output_file" >> "$faults_file"
   done
 }
 
