@@ -27,11 +27,11 @@ generate_timestamp() {
 # Se selecciona el elemento del array misions que tiene el indice aleatorio generado
 # Por ultimo se genera el sufijo del archivo generado con 5 ceros antes del numero del archivo
 generate_filename() {
-  local mission_index=$((RANDOM % ${#MISSIONS[@]}))
-  local mission=${MISSIONS[$mission_index]}
+  local mission="$1"
   local number=$(printf "%05d" $((RANDOM % (MAX_FILES - MIN_FILES + 1) + MIN_FILES)))
   echo "${LOG_PREFIX}-${mission}-${number}.log"
 }
+
 
 # === Función: Generar hash SHA256 si misión es conocida ===
 # Se genera la huella digital del documento (Hash) que sirve para ubicar y trackear el archivo
@@ -71,7 +71,6 @@ generate_log_entry() {
 generate_files() {
   # Cuántos archivos se generarán este ciclo
   local file_count=$((RANDOM % (MAX_FILES - MIN_FILES + 1) + MIN_FILES))
-  echo "Cantidad de archivos a generar: $file_count"
 
   for ((i = 1; i <= file_count; i++)); do
     # Elegir misión aleatoria
@@ -79,14 +78,13 @@ generate_files() {
     local mission=${MISSIONS[$mission_index]}
 
     # Generar nombre base y agregar timestamp para unicidad
-    local filename=$(generate_filename)               # APL-[ORBONE|CLNM|TMRS|GALXONE|UNKN]-0000[1-100].log
+    local filename=$(generate_filename "$mission")               # APL-[ORBONE|CLNM|TMRS|GALXONE|UNKN]-0000[1-100].log
 
     # Crear contenido del archivo
     local log_line=$(generate_log_entry "$mission")
 
     # Guardar en carpeta devices/
     echo -e "$log_line" > "${LOG_FOLDER}/${filename}"
-    echo "Archivo creado: $filename"
   done
 }
 
@@ -116,6 +114,7 @@ consolidate_files() {
     # Comparar con el día actual
     if [[ "$log_day" == "$day_id" ]]; then
       cat "$file" >> "$output_file"
+    # En caso de tener archivos con fechas inconsistentes se notifica en consola de cual es el hash del archivo invalido
     else
       log_hash=$(cut -f5 "$file")
       echo "⚠️ Archivo ignorado por fecha inválida: $file"
@@ -132,18 +131,24 @@ consolidate_files() {
 # - Consolidación de dispositivos inoperables (estado "faulty").
 # - Cálculo de porcentajes de registros por misión.
 # - Cálculo de porcentajes de registros por tipo de dispositivo.
-# El archivo se guarda en el directorio de reportes con el nombre: APLSTATS-[REPORTE]-ddmmyyHHMISS.log
+# El archivo se guarda en el directorio de reportes con el nombre: APLSTATS-REPORTE-ddmmyy-HHMMSS.log
+# Para mantener un solo reporte por día, se elimina cualquier reporte anterior del mismo día antes de generar uno nuevo.
 generate_reports() {
-  local timestamp=$(date +"%d%m%y%H%M%S")
-  local day_id=$(date +"$DAILY_FORMAT")
-  local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-${day_id}.log"
+  local timestamp=$(date +"%d%m%y%H%M%S")                         # Fecha y hora completa
+  local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-$(date +"$DAILY_FORMAT").log"
   local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp}.log"
-  
+
   # Verifica que exista el consolidado para el día evaluado
   if [[ ! -f "$consolidated_file" ]]; then
     echo "❌ Consolidado no encontrado: $consolidated_file"
     return
   fi
+
+  # Elimina reportes anteriores del mismo día para mantener un solo reporte diario actualizado
+  # unicamente quiero un archivo que resuma los estadisticos por dia y le dejo el timestamp de hhmmss para poder identificar cuando se actualizo por ultima vez
+  # si no quisiera ver cuando se actualizo por ultima vez simplemente lo llamaria con DDMMYY y lo sobreescribiria, por eso se eliminan.
+  # El patrón busca cualquier archivo que empiece por APLSTATS-REPORTE- y tenga el mismo día (ddmmyy)
+  rm -f "${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp:0:6}"*.log
 
   # Cuenta la cantidad total de registros (sin contar el header)
   local total=$(grep -v "^date" "$consolidated_file" | wc -l)
@@ -223,13 +228,16 @@ generate_reports() {
       }
     ' "$consolidated_file" | sort -nr | awk '{ printf "%s\t%s%%\n", $2, $1 }'
     echo ""
-    
-  } > "$report_file"
+
+  } > "$report_file"      # Esto hace que todo se grabe en el registro, si no se enviara al report se imprimiria en pantalla
+
+  #echo "✅ Reporte actualizado: $(basename "$report_file")"
 }
+
 
 # Movemos los archivos ya procesados de devices a backups
 move_to_backup() {
-  echo "Moviendo archivos .log a la carpeta de respaldo..."
+  #echo "Moviendo archivos .log a la carpeta de respaldo..."
 
   # Activa la opción nullglob: si no hay archivos .log, el patrón *.log no se deja como texto,
   # sino que se convierte en un array vacío. Así evitamos errores al iterar sobre archivos inexistentes.
@@ -238,7 +246,7 @@ move_to_backup() {
   local files=("${LOG_FOLDER}"/*.log)
 
   if [[ ${#files[@]} -eq 0 ]]; then
-    echo "✅ No hay archivos para mover."
+    #echo "✅ No hay archivos para mover."
     return
   fi
 
@@ -247,12 +255,16 @@ move_to_backup() {
     mv "$file" "$BACKUP_FOLDER/"
   done
 
-  echo "✅ Archivos movidos a $BACKUP_FOLDER"
+  #echo "✅ Archivos movidos a $BACKUP_FOLDER"
 }
 
 main_loop() {
   echo "🛰️  Iniciando ciclo automático Apolo-11 (cada $CYCLE_SECONDS segundos)..."
   init_directories
+  
+  # Captura de interrupción con Ctrl+C, esto es unicamente para identificar cuando se interrumpe la ejecución del sistema
+  trap 'echo -e "\n🚨 Ejecución interrumpida por el usuario. Cerrando Apolo-11..."; exit 0' INT
+
 
   while true; do
     echo ""
