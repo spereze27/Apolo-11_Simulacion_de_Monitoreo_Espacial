@@ -95,8 +95,6 @@ generate_files() {
 # En cada log se lee la primera columna del archivo (la fecha completa del evento) y extrae los primeros 6 caracteres (ddmmaa)
 # Compara si el día en la línea del archivo coincide con el día actual y de ser asi añade su registro al consolidado del dia.
 consolidate_files() {
-  echo "Consolidando archivos del día actual..."
-
   local day_id=$(date +"$DAILY_FORMAT")
   local output_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-${day_id}.log"
 
@@ -110,17 +108,55 @@ consolidate_files() {
     [[ -e "$file" ]] || continue
 
     # Leer la primera columna (fecha completa) del archivo (esto para verificar que los reportes correspondan al dia que los resume)
+    # Esto puede parecer redundante ya que los archivos .log se moveran a la carpeta de backup pero esta verificación se realiza con el fin de detectar 
+    # corrupcion en las fechas o formatos.
     log_date=$(cut -f1 "$file")          # ej: 120724153012
     log_day="${log_date:0:6}"            # extrae los primeros 6 caracteres → ddmmAA
 
     # Comparar con el día actual
     if [[ "$log_day" == "$day_id" ]]; then
       cat "$file" >> "$output_file"
+    else
+      log_hash=$(cut -f5 "$file")
+      echo "⚠️ Archivo ignorado por fecha inválida: $file"
+      echo "   → Fecha encontrada: $log_date (esperada: $day_id)"
+      echo "   → Hash en el archivo: $log_hash"
     fi
   done
-
-  echo "Archivo consolidado actualizado: $output_file"
 }
-consolidate_files
+
+generate_reports() {
+  local day_id=$(date +"$DAILY_FORMAT")
+  local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-${day_id}.log"
+  local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${day_id}.log"
+
+  if [[ ! -f "$consolidated_file" ]]; then
+    echo "❌ Consolidado no encontrado: $consolidated_file"
+    return
+  fi
+
+  {
+    echo "===== REPORTE DIARIO - $day_id ====="
+    echo ""
+
+    echo "--- Eventos por misión ---"
+    cut -f2 "$consolidated_file" | grep -v -e "^mission$" \
+      | sort | uniq -c | sort -nr \
+      | awk '{ printf "%-5s %s\n", $1, $2 }'
+    echo ""
+
+    echo "--- Estados de dispositivos ---"
+    cut -f4 "$consolidated_file" | grep -v -e "^device_status$" \
+      | sort | uniq -c | sort -nr \
+      | awk '{ printf "%-5s %s\n", $1, $2 }'
+    echo ""
+
+    echo "--- Registros desconocidos (misión UNKN) ---"
+    grep -P "${FIELD_SEPARATOR}UNKN${FIELD_SEPARATOR}" "$consolidated_file" | wc -l
+  } > "$report_file"
+}
+
+
+generate_reports
 
 
