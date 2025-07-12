@@ -32,18 +32,10 @@ Este programa:
   - Misiones disponibles
   - Tipos de dispositivos disponibles
   - Estados posibles
-<<<<<<< HEAD
   - Rutas de salida:
     - `LOG_FOLDER="./devices"` – Carpeta donde se guardan los archivos generados
     - `BACKUP_FOLDER="./backups"` – Carpeta donde se mueven los archivos procesados
     - `REPORT_FOLDER="./reports"` – Carpeta donde se guardan los reportes generados
-
-=======
-  - Rutas de salida
-   - LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
-   - BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
-   - REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
->>>>>>> ee194db62c246cedc024b9bfee2ce089632590be
 
 - `README.md`: Este documento.
 
