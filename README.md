@@ -7,7 +7,6 @@ Este proyecto simula un sistema de monitoreo unificado para la NASA, como parte 
 
 Antes de ejecutar el script, es necesario otorgar permisos de ejecución al archivo `apolo-11.sh`. Para ello, ejecute en la terminal:
 
-bash
 chmod +x apolo-11.sh
 
 
@@ -34,9 +33,9 @@ Este programa:
   - Tipos de dispositivos disponibles
   - Estados posibles
   - Rutas de salida
-  * LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
-  * BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
-  * REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
+   * LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
+   * BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
+   * REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
 
 - `README.md`: Este documento.
 
