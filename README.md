@@ -1,7 +1,7 @@
 # 🛰️ Apolo-11 - Simulación de Monitoreo Espacial (NASA)
 
 Este proyecto simula un sistema de monitoreo unificado para la NASA, como parte de la evaluación de conocimientos de linux del curso de "Analitica y big data" de la universidad nacional de Colombia. Representa el primer paso en el desarrollo de una infraestructura que permita supervisar en tiempo real el estado de componentes clave en futuras misiones espaciales.
----
+
 
 ## ⚠️ Recomendación importante
 
