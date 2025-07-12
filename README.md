@@ -33,9 +33,9 @@ Este programa:
   - Tipos de dispositivos disponibles
   - Estados posibles
   - Rutas de salida
-   * LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
-   * BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
-   * REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
+   - LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
+   - BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
+   - REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
 
 - `README.md`: Este documento.
 
