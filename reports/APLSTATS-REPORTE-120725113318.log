@@ -1,0 +1,33 @@
+===== REPORTE GENERAL - 120725113318 =====
+
+--- Análisis de eventos por estado, misión y dispositivo ---
+3	UNKN	unknown	unknown
+3	TMRS	ship	unknown
+3	GALXONE	ship	good
+3	GALXONE	satellite	faulty
+3	CLNM	vehicle	unknown
+3	CLNM	vehicle	good
+2	ORBONE	spacesuit	good
+
+--- Dispositivos con más desconexiones (estado: unknown) por misión ---
+3	UNKN	unknown
+3	TMRS	ship
+3	CLNM	vehicle
+
+--- Dispositivos inoperables por misión (estado: faulty) ---
+3	GALXONE	satellite
+
+--- Porcentaje de registros por misión ---
+GALXONE	30,00%
+CLNM	30,00%
+UNKN	15,00%
+TMRS	15,00%
+ORBONE	10,00%
+
+--- Porcentaje de registros por tipo de dispositivo ---
+vehicle	30,00%
+ship	30,00%
+unknown	15,00%
+satellite	15,00%
+spacesuit	10,00%
+

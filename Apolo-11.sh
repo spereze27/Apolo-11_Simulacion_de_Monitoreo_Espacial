@@ -125,34 +125,105 @@ consolidate_files() {
   done
 }
 
+# Genera el archivo de reporte analítico del día en base al consolidado diario.
+# Este reporte incluye:
+# - Análisis de la cantidad de eventos por estado, misión y dispositivo.
+# - Identificación de dispositivos con mayor número de desconexiones (estado "unknown").
+# - Consolidación de dispositivos inoperables (estado "faulty").
+# - Cálculo de porcentajes de registros por misión.
+# - Cálculo de porcentajes de registros por tipo de dispositivo.
+# El archivo se guarda en el directorio de reportes con el nombre: APLSTATS-[REPORTE]-ddmmyyHHMISS.log
 generate_reports() {
+  local timestamp=$(date +"%d%m%y%H%M%S")
   local day_id=$(date +"$DAILY_FORMAT")
   local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-${day_id}.log"
-  local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${day_id}.log"
-
+  local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp}.log"
+  
+  # Verifica que exista el consolidado para el día evaluado
   if [[ ! -f "$consolidated_file" ]]; then
     echo "❌ Consolidado no encontrado: $consolidated_file"
     return
   fi
 
+  # Cuenta la cantidad total de registros (sin contar el header)
+  local total=$(grep -v "^date" "$consolidated_file" | wc -l)
+
   {
-    echo "===== REPORTE DIARIO - $day_id ====="
+    echo "===== REPORTE GENERAL - $timestamp ====="
     echo ""
 
-    echo "--- Eventos por misión ---"
-    cut -f2 "$consolidated_file" | grep -v -e "^mission$" \
-      | sort | uniq -c | sort -nr \
-      | awk '{ printf "%-5s %s\n", $1, $2 }'
+    ### 1. Análisis de eventos por estado, misión y dispositivo
+    # Cuenta cuántas veces ocurre cada combinación de:
+    # $2: misión, $3: tipo de dispositivo, $4: estado
+    # Se excluye el encabezado (NR > 1) y se ordena de mayor a menor
+    echo "--- Análisis de eventos por estado, misión y dispositivo ---"
+    awk -F "$FIELD_SEPARATOR" '
+      NR > 1 {
+        combo = $2 FS $3 FS $4
+        count[combo]++
+      }
+      END {
+        for (c in count) print count[c] FS c
+      }
+    ' "$consolidated_file" | sort -nr
     echo ""
 
-    echo "--- Estados de dispositivos ---"
-    cut -f4 "$consolidated_file" | grep -v -e "^device_status$" \
-      | sort | uniq -c | sort -nr \
-      | awk '{ printf "%-5s %s\n", $1, $2 }'
+    ### 2. Gestión de desconexiones (estado: unknown)
+    # Agrupa por misión y dispositivo, contando solo registros con estado "unknown"
+    echo "--- Dispositivos con más desconexiones (estado: unknown) por misión ---"
+    awk -F "$FIELD_SEPARATOR" '
+      NR > 1 && $4 == "unknown" {
+        key = $2 FS $3
+        discon[key]++
+      }
+      END {
+        for (k in discon) print discon[k] FS k
+      }
+    ' "$consolidated_file" | sort -nr
     echo ""
 
-    echo "--- Registros desconocidos (misión UNKN) ---"
-    grep -P "${FIELD_SEPARATOR}UNKN${FIELD_SEPARATOR}" "$consolidated_file" | wc -l
+    ### 3. Dispositivos inoperables por misión (estado: faulty)
+    # Agrupa por misión y dispositivo, contando solo los registros "faulty"
+    echo "--- Dispositivos inoperables por misión (estado: faulty) ---"
+    awk -F "$FIELD_SEPARATOR" '
+      NR > 1 && $4 == "faulty" {
+        key = $2 FS $3
+        faults[key]++
+      }
+      END {
+        for (k in faults) print faults[k] FS k
+      }
+    ' "$consolidated_file" | sort -nr
+    echo ""
+
+    ### 4. Porcentajes de registros por misión
+    # Cuenta cuántas veces aparece cada misión, calcula su porcentaje y ordena de mayor a menor
+    echo "--- Porcentaje de registros por misión ---"
+    awk -F "$FIELD_SEPARATOR" -v total="$total" '
+      NR > 1 { mission[$2]++ }
+      END {
+        for (m in mission) {
+          pct = (mission[m] / total) * 100
+          printf "%.2f\t%s\n", pct, m
+        }
+      }
+    ' "$consolidated_file" | sort -nr | awk '{ printf "%s\t%s%%\n", $2, $1 }'
+    echo ""
+
+    ### 5. Porcentajes de registros por tipo de dispositivo
+    # Analogo al porcentaje de cada mision
+    echo "--- Porcentaje de registros por tipo de dispositivo ---"
+    awk -F "$FIELD_SEPARATOR" -v total="$total" '
+      NR > 1 { dev[$3]++ }
+      END {
+        for (d in dev) {
+          pct = (dev[d] / total) * 100
+          printf "%.2f\t%s\n", pct, d
+        }
+      }
+    ' "$consolidated_file" | sort -nr | awk '{ printf "%s\t%s%%\n", $2, $1 }'
+    echo ""
+    
   } > "$report_file"
 }
 
