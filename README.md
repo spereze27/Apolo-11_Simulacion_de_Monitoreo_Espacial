@@ -2,12 +2,16 @@
 
 Este proyecto simula un sistema de monitoreo unificado para la NASA, como parte de la evaluación de conocimientos de linux del curso de "Analitica y big data" de la universidad nacional de Colombia. Representa el primer paso en el desarrollo de una infraestructura que permita supervisar en tiempo real el estado de componentes clave en futuras misiones espaciales.
 
+Algunos cambios relevantes para tener en cuenta son que en el consolidado se saca adicionalmente el archivo FALLAS que recapitula todas las fallas registradas, esto se hizo para tener una mejor visual de lo que ocurre internamente en las misiones ya que no solo se quiere ver cuantos dispositivos han fallado sino tambien cuales.
+
 
 ## ⚠️ Recomendación importante
 
 Antes de ejecutar el script, es necesario otorgar permisos de ejecución al archivo `apolo-11.sh`. Para ello, ejecute en la terminal:
 
 chmod +x apolo-11.sh
+
+Por favor tenga en cuenta definir cada cuanto se debe correr el programa Apolo-11.sh en el config (variable CYCLE_SECONDS=20, el 20 esta por default y son 20 segundos), si se desea cambiar el tiempo de ejecucion posterior al comienzo de la operacion se debe detener el programa (control + C en el terminal) y modificar desde el config el tiempo de corrida del programa
 
 
 ## 🎯 Objetivo
