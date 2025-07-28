@@ -7,12 +7,47 @@ Algunos cambios relevantes para tener en cuenta son que en el consolidado se sac
 
 ## ⚠️ Recomendación importante
 
-Antes de ejecutar el script, es necesario otorgar permisos de ejecución al archivo `apolo-11.sh`. Para ello, ejecute en la terminal:
+Antes de ejecutar el script, es necesario otorgar permisos de ejecución al archivo `Apolo-11.sh`. Para ello, en la terminal:
 
-chmod +x apolo-11.sh
+```bash
+chmod +x Apolo-11.sh
+```
 
-Por favor tenga en cuenta definir cada cuanto se debe correr el programa Apolo-11.sh en el config (variable CYCLE_SECONDS=20, el 20 esta por default y son 20 segundos), si se desea cambiar el tiempo de ejecucion posterior al comienzo de la operacion se debe detener el programa (control + C en el terminal) y modificar desde el config el tiempo de corrida del programa
+El script `Apolo-11.sh` utiliza una estructura `case "$1"` que permite ejecutar acciones en función del argumento pasado (por ejemplo: `run`, `help`, etc.).  
+Esto se hace con el objetivo de integrarlo con `cron`, un demonio del sistema (servicio que corre en segundo plano en Linux) que permite programar tareas para que se ejecuten automáticamente en intervalos definidos de tiempo.
 
+---
+
+## 📝 Cómo programar la ejecución con `cron`
+
+1. Abre el editor de tareas de `cron` con:
+
+```bash
+crontab -e
+```
+
+2. Agrega la siguiente línea para ejecutar el script cada minuto:
+
+```bash
+* * * * * bash /ruta/absoluta/Apolo11/Apolo-11.sh run >> /ruta/absoluta/Apolo11/logs/apolo.log 2>&1
+```
+
+- El argumento `run` indica que se debe ejecutar el flujo principal del script.
+- La redirección `>> ... 2>&1` guarda tanto la salida estándar como los errores en el archivo `apolo.log`.
+
+---
+
+## ⏱️ ¿Y si quiero que se ejecute cada 20 segundos?
+
+`cron` solo permite una frecuencia mínima de **1 minuto**, pero puedes simular ejecuciones cada 20 segundos agregando varias líneas con `sleep`:
+
+```bash
+* * * * * bash /ruta/absoluta/Apolo11/Apolo-11.sh run >> /ruta/absoluta/Apolo11/logs/apolo.log 2>&1
+* * * * * sleep 20; bash /ruta/absoluta/Apolo11/Apolo-11.sh run >> /ruta/absoluta/Apolo11/logs/apolo.log 2>&1
+* * * * * sleep 40; bash /ruta/absoluta/Apolo11/Apolo-11.sh run >> /ruta/absoluta/Apolo11/logs/apolo.log 2>&1
+```
+
+Esto ejecutará el mismo script **tres veces por minuto**, con intervalos de 20 segundos entre cada ejecución.
 
 ## 🎯 Objetivo
 

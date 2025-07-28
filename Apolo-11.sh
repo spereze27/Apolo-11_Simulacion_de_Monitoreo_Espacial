@@ -278,6 +278,12 @@ move_to_backup() {
 # que se encarga de ejecutar tareas automáticamente en intervalos de tiempo definidos.)
 # para cargar el chron se debe poner en terminal crontab -e para editar el chron y agregar * * * * * ruta_absoluta_al_folder_Apolo-11/Apolo-11.sh run >> ruta_absoluta_al_folder_Apolo-11/logs/apolo.log 2>&1
 # la parte ruta_absoluta_al_folder_Apolo-11/logs/apolo.log 2>&1 unicamente es para llevar el registro de los logs del sistema
+# Importante resaltar que chron funciona con intervalos de minutos por lo que si se desea que sea cada 20 segundos es necesario agregar varias veces la linea de ejecucion
+# y darle un sleep de los tiempos deseados por ejemplo para ejecutar cada 20 segundos seria:
+# * * * * * /home/quind/GIT/Apolo11/Apolo-11.sh run >> /home/quind/GIT/Apolo11/logs/apolo.log 2>&1
+# * * * * * sleep 20; /home/quind/GIT/Apolo11/Apolo-11.sh run >> /home/quind/GIT/Apolo11/logs/apolo.log 2>&1
+# * * * * * sleep 40; /home/quind/GIT/Apolo11/Apolo-11.sh run >> /home/quind/GIT/Apolo11/logs/apolo.log 2>&1
+# esto ejecutara 3 veces el archivo con intervalos de 20 segundos
 
 case "$1" in
   "run")
