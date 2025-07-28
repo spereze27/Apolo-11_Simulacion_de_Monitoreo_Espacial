@@ -15,6 +15,7 @@ init_directories() {
   mkdir -p "$LOG_FOLDER"
   mkdir -p "$BACKUP_FOLDER"
   mkdir -p "$REPORT_FOLDER"
+  mkdir -p "$STATUS_FOLDER"
 }
 
 # === Función: Generar timestamp actual con formato configurable ===

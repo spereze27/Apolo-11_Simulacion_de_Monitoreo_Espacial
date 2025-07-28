@@ -26,6 +26,8 @@ Esto se hace con el objetivo de integrarlo con `cron`, un demonio del sistema (s
 
 ## 📝 Cómo programar la ejecución con `cron`
 
+0. Has una prueba de correr el archivo por primera vez con ./Apolo-11.sh run (desde la ruta donde esta el archivo), en caso de que no lo hagas se debe de crear la carpeta logs en la ubicacion del archivo para que el cron pueda guardar los registros, en caso de hacer la prueba inicial se creara la carpeta logs.
+
 1. Abre el editor de tareas de `cron` con:
 
 ```bash
@@ -95,4 +97,5 @@ Este programa:
 ├── /devices           # Archivos de simulación generados por cada ciclo
 ├── /reports           # Reportes consolidados y analíticos diarios
 ├── /backups           # Archivos ya procesados, movidos desde /devices
+├── /logs              # Estados de ejecucion del programa
 └── README.md

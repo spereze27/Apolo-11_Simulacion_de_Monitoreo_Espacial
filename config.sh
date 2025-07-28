@@ -12,6 +12,7 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FOLDER="${BASE_DIR}/devices"            # Carpeta donde se guardan los archivos generados
 BACKUP_FOLDER="${BASE_DIR}/backups"         # Carpeta donde se mueven los archivos procesados
 REPORT_FOLDER="${BASE_DIR}/reports"         # Carpeta donde se guardan los reportes generados
+STATUS_FOLDER="${BASE_DIR}/logs"         # Carpeta donde se guardan los estados de ejecucion del programa
 
 
 # === CICLO DE SIMULACIÓN ===
