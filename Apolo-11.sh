@@ -154,7 +154,7 @@ consolidate_files() {
 # - Porcentajes de participación por misión y por tipo de dispositivo.
 #
 #  La base de datos se elimina al sobreescribirse en la siguiente ejecución, por lo que su uso es transitorio.
-#  El resultado final se guarda en un archivo de reporte con timestamp para identificar cuándo se generó.
+#  El resultado final se guarda en un archivo de reporte con timestamp para identificar cuándo se actualizo por ultima vez.
 
 generate_reports_sql() {
   # Generar marca de tiempo actual con formato: ddmmaahhmmss
@@ -177,13 +177,24 @@ generate_reports_sql() {
   fi
   # Eliminar reportes anteriores del mismo día para evitar duplicados
   rm -f "${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp:0:6}"*.log
+  # Crear base de datos e importar archivo sin encabezado (saltamos la primera línea con tail)
+  tail -n +2 "$consolidated_file" > "${consolidated_file}.tmp"
 
-  # Crear la base de datos (si no existe) e importar el archivo consolidado como tabla CSV usando ; como separador
 sqlite3 "$sqlite_db" <<EOF
+DROP TABLE IF EXISTS $table_name;
+CREATE TABLE $table_name (
+  date TEXT,
+  mission TEXT,
+  device_type TEXT,
+  device_status TEXT,
+  hash TEXT
+);
 .mode csv
 .separator ";"
-.import $consolidated_file $table_name
+.import ${consolidated_file}.tmp $table_name
 EOF
+
+rm "${consolidated_file}.tmp"
 
   {
     echo "===== REPORTE GENERAL - $timestamp ====="
