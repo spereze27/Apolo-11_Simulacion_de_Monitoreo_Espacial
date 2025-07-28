@@ -13,6 +13,12 @@ Antes de ejecutar el script, es necesario otorgar permisos de ejecución al arch
 chmod +x Apolo-11.sh
 ```
 
+El analisis de los datos se hace con sql por lo que asegurate de tener instalado sqlite3
+
+```bash
+sudo apt install sqlite3
+```
+
 El script `Apolo-11.sh` utiliza una estructura `case "$1"` que permite ejecutar acciones en función del argumento pasado (por ejemplo: `run`, `help`, etc.).  
 Esto se hace con el objetivo de integrarlo con `cron`, un demonio del sistema (servicio que corre en segundo plano en Linux) que permite programar tareas para que se ejecuten automáticamente en intervalos definidos de tiempo.
 

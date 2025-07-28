@@ -139,114 +139,107 @@ consolidate_files() {
   done
 }
 
-# Genera el archivo de reporte analítico del día en base al consolidado diario.
-# Este reporte incluye:
-# - Análisis de la cantidad de eventos por estado, misión y dispositivo.
-# - Identificación de dispositivos con mayor número de desconexiones (estado "unknown").
-# - Consolidación de dispositivos inoperables (estado "faulty").
-# - Cálculo de porcentajes de registros por misión.
-# - Cálculo de porcentajes de registros por tipo de dispositivo.
-# El archivo se guarda en el directorio de reportes con el nombre: APLSTATS-REPORTE-ddmmyy-HHMMSS.log
-# Para mantener un solo reporte por día, se elimina cualquier reporte anterior del mismo día antes de generar uno nuevo.
-generate_reports() {
-  local timestamp=$(date +"%d%m%y%H%M%S")                         # Fecha y hora completa
-  local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-$(date +"$DAILY_FORMAT").log"
-  local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp}.log"
+# === Función: generate_reports_sql ===
+# Esta función realiza los análisis estadísticos diarios de los eventos registrados por misión.
+# En lugar de usar Bash puro (awk, grep, etc.), se opta por usar SQLite3 por eficiencia, legibilidad y escalabilidad.
+#
+#  ¿Por qué usar SQLite?
+# - SQLite permite realizar consultas complejas de forma declarativa, eficiente y fácil de mantener.
+# - Se crea una base de datos **temporal y liviana** directamente sobre el archivo consolidado del día.
+# - No requiere instalación de un servidor ni credenciales de acceso: todo se ejecuta de forma local y segura.
+#
+#  ¿Qué se analiza?
+# - Distribución de eventos por estado, misión y tipo de dispositivo.
+# - Identificación de desconexiones (`unknown`) y fallas (`faulty`) por dispositivo y misión.
+# - Porcentajes de participación por misión y por tipo de dispositivo.
+#
+#  La base de datos se elimina al sobreescribirse en la siguiente ejecución, por lo que su uso es transitorio.
+#  El resultado final se guarda en un archivo de reporte con timestamp para identificar cuándo se generó.
 
-  # Verifica que exista el consolidado para el día evaluado
+generate_reports_sql() {
+  # Generar marca de tiempo actual con formato: ddmmaahhmmss
+  local timestamp=$(date +"%d%m%y%H%M%S")
+  # Obtener el ID del día con el formato especificado en DAILY_FORMAT (ddmmaa)
+  local day_id=$(date +"$DAILY_FORMAT")
+  # Ruta al archivo consolidado de eventos del día
+  local consolidated_file="${REPORT_FOLDER}/${REPORT_PREFIX}-CONSOLIDADO-${day_id}.log"
+  # Nombre del archivo de reporte que se generará
+  local report_file="${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp}.log"
+  # Base de datos SQLite donde se importan los datos del consolidado
+  local sqlite_db="${REPORT_FOLDER}/apolo_reports.db"
+  # Nombre de la tabla en SQLite (una por día)
+  local table_name="logs_${day_id}"
+
+  # Verificar si el archivo consolidado existe antes de continuar
   if [[ ! -f "$consolidated_file" ]]; then
     echo "❌ Consolidado no encontrado: $consolidated_file"
     return
   fi
-
-  # Elimina reportes anteriores del mismo día para mantener un solo reporte diario actualizado
-  # unicamente quiero un archivo que resuma los estadisticos por dia y le dejo el timestamp de hhmmss para poder identificar cuando se actualizo por ultima vez
-  # si no quisiera ver cuando se actualizo por ultima vez simplemente lo llamaria con DDMMYY y lo sobreescribiria, por eso se eliminan.
-  # El patrón busca cualquier archivo que empiece por APLSTATS-REPORTE- y tenga el mismo día (ddmmyy)
+  # Eliminar reportes anteriores del mismo día para evitar duplicados
   rm -f "${REPORT_FOLDER}/${REPORT_PREFIX}-REPORTE-${timestamp:0:6}"*.log
 
-  # Cuenta la cantidad total de registros (sin contar el header)
-  local total=$(grep -v "^date" "$consolidated_file" | wc -l)
+  # Crear la base de datos (si no existe) e importar el archivo consolidado como tabla CSV usando ; como separador
+sqlite3 "$sqlite_db" <<EOF
+.mode csv
+.separator ";"
+.import $consolidated_file $table_name
+EOF
 
   {
     echo "===== REPORTE GENERAL - $timestamp ====="
     echo ""
-
-    ### 1. Análisis de eventos por estado, misión y dispositivo
-    # Cuenta cuántas veces ocurre cada combinación de:
-    # $2: misión, $3: tipo de dispositivo, $4: estado
-    # Se excluye el encabezado (NR > 1) y se ordena de mayor a menor
+  # Análisis 1: Eventos agrupados por misión, tipo de dispositivo y estado
     echo "--- Análisis de eventos por estado, misión y dispositivo ---"
-    awk -F "$FIELD_SEPARATOR" '
-      NR > 1 {
-        combo = $2 FS $3 FS $4
-        count[combo]++
-      }
-      END {
-        for (c in count) print count[c] FS c
-      }
-    ' "$consolidated_file" | sort -nr
+    sqlite3 "$sqlite_db" <<EOF
+.headers off
+.mode tabs
+SELECT COUNT(*), mission, device_type, device_status
+FROM $table_name
+GROUP BY mission, device_type, device_status
+ORDER BY COUNT(*) DESC;
+EOF
     echo ""
-
-    ### 2. Gestión de desconexiones (estado: unknown)
-    # Agrupa por misión y dispositivo, contando solo registros con estado "unknown"
+  # Análisis 2: Dispositivos con más desconexiones (estado 'unknown')
     echo "--- Dispositivos con más desconexiones (estado: unknown) por misión ---"
-    awk -F "$FIELD_SEPARATOR" '
-      NR > 1 && $4 == "unknown" {
-        key = $2 FS $3
-        discon[key]++
-      }
-      END {
-        for (k in discon) print discon[k] FS k
-      }
-    ' "$consolidated_file" | sort -nr
+    sqlite3 "$sqlite_db" <<EOF
+SELECT COUNT(*), mission, device_type
+FROM $table_name
+WHERE device_status = 'unknown'
+GROUP BY mission, device_type
+ORDER BY COUNT(*) DESC;
+EOF
     echo ""
-
-    ### 3. Dispositivos inoperables por misión (estado: faulty)
-    # Agrupa por misión y dispositivo, contando solo los registros "faulty"
+  # Análisis 3: Dispositivos en falla (estado 'faulty')
     echo "--- Dispositivos inoperables por misión (estado: faulty) ---"
-    awk -F "$FIELD_SEPARATOR" '
-      NR > 1 && $4 == "faulty" {
-        key = $2 FS $3
-        faults[key]++
-      }
-      END {
-        for (k in faults) print faults[k] FS k
-      }
-    ' "$consolidated_file" | sort -nr
+    sqlite3 "$sqlite_db" <<EOF
+SELECT COUNT(*), mission, device_type
+FROM $table_name
+WHERE device_status = 'faulty'
+GROUP BY mission, device_type
+ORDER BY COUNT(*) DESC;
+EOF
     echo ""
-
-    ### 4. Porcentajes de registros por misión
-    # Cuenta cuántas veces aparece cada misión, calcula su porcentaje y ordena de mayor a menor
+  # Análisis 4: Porcentaje de registros por misión
     echo "--- Porcentaje de registros por misión ---"
-    awk -F "$FIELD_SEPARATOR" -v total="$total" '
-      NR > 1 { mission[$2]++ }
-      END {
-        for (m in mission) {
-          pct = (mission[m] / total) * 100
-          printf "%.2f\t%s\n", pct, m
-        }
-      }
-    ' "$consolidated_file" | sort -nr | awk '{ printf "%s\t%s%%\n", $2, $1 }'
+    sqlite3 "$sqlite_db" <<EOF
+WITH total (cnt) AS (SELECT COUNT(*) FROM $table_name)
+SELECT ROUND(100.0 * COUNT(*) / (SELECT cnt FROM total), 2) || '%', mission
+FROM $table_name
+GROUP BY mission
+ORDER BY COUNT(*) DESC;
+EOF
     echo ""
-
-    ### 5. Porcentajes de registros por tipo de dispositivo
-    # Analogo al porcentaje de cada mision
+  # Análisis 5: Porcentaje de registros por tipo de dispositivo
     echo "--- Porcentaje de registros por tipo de dispositivo ---"
-    awk -F "$FIELD_SEPARATOR" -v total="$total" '
-      NR > 1 { dev[$3]++ }
-      END {
-        for (d in dev) {
-          pct = (dev[d] / total) * 100
-          printf "%.2f\t%s\n", pct, d
-        }
-      }
-    ' "$consolidated_file" | sort -nr | awk '{ printf "%s\t%s%%\n", $2, $1 }'
+    sqlite3 "$sqlite_db" <<EOF
+WITH total (cnt) AS (SELECT COUNT(*) FROM $table_name)
+SELECT ROUND(100.0 * COUNT(*) / (SELECT cnt FROM total), 2) || '%', device_type
+FROM $table_name
+GROUP BY device_type
+ORDER BY COUNT(*) DESC;
+EOF
     echo ""
-
-  } > "$report_file"      # Esto hace que todo se grabe en el registro, si no se enviara al report se imprimiria en pantalla
-
-  #echo "✅ Reporte actualizado: $(basename "$report_file")"
+  } > "$report_file"
 }
 
 
@@ -291,7 +284,7 @@ case "$1" in
     init_directories
     generate_files
     consolidate_files
-    generate_reports
+    generate_reports_sql
     move_to_backup
     ;;
   *)

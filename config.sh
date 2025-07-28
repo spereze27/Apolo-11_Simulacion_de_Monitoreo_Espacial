@@ -40,5 +40,5 @@ LOG_PREFIX="APL"               # Prefijo para archivos de simulación
 REPORT_PREFIX="APLSTATS"       # Prefijo para reportes generados
 
 # === OTROS ===
-FIELD_SEPARATOR=$'\t'          # Separador usado en los archivos .log
+FIELD_SEPARATOR=$';'          # Separador usado en los archivos .log
 
