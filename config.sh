@@ -6,9 +6,13 @@
 ###############################################
 
 # === RUTAS DE TRABAJO ===
-LOG_FOLDER="./devices"        # Carpeta donde se guardan los archivos generados
-BACKUP_FOLDER="./backups"     # Carpeta donde se mueven los archivos procesados
-REPORT_FOLDER="./reports"     # Carpeta donde se guardan los reportes generados
+# Obtener la ruta absoluta del script
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"  
+
+LOG_FOLDER="${BASE_DIR}/devices"            # Carpeta donde se guardan los archivos generados
+BACKUP_FOLDER="${BASE_DIR}/backups"         # Carpeta donde se mueven los archivos procesados
+REPORT_FOLDER="${BASE_DIR}/reports"         # Carpeta donde se guardan los reportes generados
+
 
 # === CICLO DE SIMULACIÓN ===
 CYCLE_SECONDS=20              # Tiempo (en segundos) entre cada ejecución

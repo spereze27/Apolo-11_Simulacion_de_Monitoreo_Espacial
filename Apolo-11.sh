@@ -1,5 +1,9 @@
-# === Cargar configuración ===
-CONFIG_FILE="./config.sh"
+#!/bin/bash
+
+# === Cargar configuración (ruta absoluta del script) ===
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${SCRIPT_DIR}/config.sh"
+
 if [[ ! -f "$CONFIG_FILE" ]]; then
   echo "ERROR: Archivo de configuración '$CONFIG_FILE' no encontrado."
   exit 1
@@ -269,28 +273,25 @@ move_to_backup() {
   #echo "✅ Archivos movidos a $BACKUP_FOLDER"
 }
 
-main_loop() {
-  echo "🛰️  Iniciando ciclo automático Apolo-11 (cada $CYCLE_SECONDS segundos)..."
-  init_directories
-  
-  # Captura de interrupción con Ctrl+C, esto es unicamente para identificar cuando se interrumpe la ejecución del sistema
-  trap 'echo -e "\n🚨 Ejecución interrumpida por el usuario. Cerrando Apolo-11..."; exit 0' INT
+# Se ajusta para correr el proceso desde la terminal, case "$1" verifica el primer argumento que se pasó al script (ej: run, help)
+# esto se hace con el objetivo de automatizar la tarea con chron ( un demonio del sistema (es decir, un servicio que corre en segundo plano en Linux)
+# que se encarga de ejecutar tareas automáticamente en intervalos de tiempo definidos.)
+# para cargar el chron se debe poner en terminal crontab -e para editar el chron y agregar * * * * * ruta_absoluta_al_folder_Apolo-11/Apolo-11.sh run >> ruta_absoluta_al_folder_Apolo-11/logs/apolo.log 2>&1
+# la parte ruta_absoluta_al_folder_Apolo-11/logs/apolo.log 2>&1 unicamente es para llevar el registro de los logs del sistema
 
-
-  while true; do
-    echo ""
-    echo "🕒 Nueva ejecución: $(date)"
-    
+case "$1" in
+  "run")
+    echo "🛰️  Ejecutando ciclo Apolo-11"
+    init_directories
     generate_files
     consolidate_files
     generate_reports
     move_to_backup
-
-    echo "⏳ Esperando $CYCLE_SECONDS segundos para la siguiente ejecución..."
-    sleep "$CYCLE_SECONDS"
-  done
-}
-
-main_loop
+    ;;
+  *)
+    echo "❌ Uso inválido. Prueba: $0 run"
+    exit 1
+    ;;
+esac
 
 
